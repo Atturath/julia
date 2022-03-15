@@ -1,25 +1,21 @@
 using LinearAlgebra
-using Test
+
 xdata = [-2 -1.64 -1.33 -0.7 0 0.45 1.2 1.64 2.32 2.9]
 
-ydata = [0.699369 0.700462 0.695354 1.03905 1.97389 2.41143 1.91091 0.919576 -0.730975 -1.42001] # 1 x 10
+ydata = [0.699369 0.700462 0.695354 1.03905 1.97389 2.41143 1.91091 0.919576 -0.730975 -1.42001]
 
-F(p,x) = @.p[1] * cos(p[2] * x) + p[2] + sin(p[1] * x)
-F2(p,x) = @.p[2] * x * cos(p[1] * x) + cos(p[2] * x)
+F(p,x) = @. p[1] * cos(p[2] * x) + p[2] + sin(p[1] * x)
+F2(p,x) = @. p[2] * x * cos(p[1] * x) + cos(p[2] * x)
 F3(p,x) = @. -p[1] * x * sin(p[2] * x) + sin(p[1] * x)
 
-
+guess = [0.5 0.5]
+xtilde = [F2(guess,xdata);F3(guess,xdata)]
+ytilde = ydata - F(guess,xdata) + (guess * xtilde)
+θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)))
+diff = sum((θtilde .- guess).^2)
 
 while diff >= 1.0e-13
-    guess = [0.5 0.5]
-    xtilde = [F2(guess,xdata);F3(guess,xdata)]
-    ytilde = ydata - F(guess,xdata) + (guess * xtilde)
-    θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)))
     guess = θtilde
-    diff = sum((θtilde .- guess).^2)
-    if diff < 1.0e-13
-        break
-        println("diff is $diff")
-        println("θtilde is $θtilde")
-    end
 end
+
+println(diff, θtilde)
