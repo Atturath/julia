@@ -9,13 +9,17 @@ F2(p,x) = @.p[2] * x * cos(p[1] * x) + cos(p[2] * x)
 F3(p,x) = @. -p[1] * x * sin(p[2] * x) + sin(p[1] * x)
 
 
-while sum(ytilde.^2) >= 1.0e-13
+
+while diff >= 1.0e-13
     guess = [0.5 0.5]
-    xtilde = [F2(guess,xdata);F3(guess,xdata)] # 2 x 10 
-    ytilde = ydata - F(guess,xdata) + (guess * xtilde) # 1 x 10
-    θtilde = inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)) # ((2 x 10) x (10 x 2) [2 x 2] x [2 x 1] ((2 x 10) x (10 x 1)))  (2 x 1)
-    guess = ytilde
-    if sum(ytilde.^2) < 1.0e-13
-        print(θtilde)
+    xtilde = [F2(guess,xdata);F3(guess,xdata)]
+    ytilde = ydata - F(guess,xdata) + (guess * xtilde)
+    θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)))
+    guess = θtilde
+    diff = sum((θtilde .- guess).^2)
+    if diff < 1.0e-13
+        break
+        println("diff is $diff")
+        println("θtilde is $θtilde")
     end
 end
