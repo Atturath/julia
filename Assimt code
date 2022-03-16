@@ -8,14 +8,20 @@ F(p,x) = @. p[1] * cos(p[2] * x) + p[2] + sin(p[1] * x)
 F2(p,x) = @. p[2] * x * cos(p[1] * x) + cos(p[2] * x)
 F3(p,x) = @. -p[1] * x * sin(p[2] * x) + sin(p[1] * x)
 
-guess = [0.5 0.5]
-xtilde = [F2(guess,xdata);F3(guess,xdata)]
-ytilde = ydata - F(guess,xdata) + (guess * xtilde)
-θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)))
-diff = sum((θtilde .- guess).^2)
 
-while diff >= 1.0e-13
+guess = [0.5 0.5]
+
+while true
+    
+    xtilde = [F2(guess,xdata);F3(guess,xdata)]
+    ytilde = ydata - F(guess,xdata) + (guess * xtilde)
+    θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)))
+    diff = sum((θtilde .- guess).^2)
     guess = θtilde
+  
+  if diff < 1.0e-13
+    break
+    println(diff, θtilde)
+  end
 end
 
-println(diff, θtilde)
