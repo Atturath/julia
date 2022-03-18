@@ -1,27 +1,28 @@
 using LinearAlgebra
-
 xdata = [-2 -1.64 -1.33 -0.7 0 0.45 1.2 1.64 2.32 2.9]
 
 ydata = [0.699369 0.700462 0.695354 1.03905 1.97389 2.41143 1.91091 0.919576 -0.730975 -1.42001]
 
-F(p,x) = @. p[1] * cos(p[2] * x) + p[2] + sin(p[1] * x)
-F2(p,x) = @. p[2] * x * cos(p[1] * x) + cos(p[2] * x)
-F3(p,x) = @. -p[1] * x * sin(p[2] * x) + sin(p[1] * x)
+F(p,x) = @. p[1] * cos(p[2] * x) + p[2] * sin(p[1] * x) 
+Fp1(p,x) = @. p[2] * x * cos(p[1] * x) + cos(p[2] * x) # differentiation with respect to p1
+Fp2(p,x) = @. -p[1] * x * sin(p[2] * x) + sin(p[1] * x) # using broadcasting to perform dot operation
 
-
-guess = [0.5 0.5]
-
-while true
-    
-    xtilde = [F2(guess,xdata);F3(guess,xdata)]
-    ytilde = ydata - F(guess,xdata) + (guess * xtilde)
-    θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde)))
-    diff = sum((θtilde .- guess).^2)
-    guess = θtilde
-  
-  if diff < 1.0e-13
-    break
-    println(diff, θtilde)
-  end
+function nlols(guess, tolerance = 1.0e-13) 
+    guess = rand(1,2) # generate a 1x2 matrix using random number between 0 and 1 as initial guess 
+    θtilde = guess
+    diff = Inf
+    while diff > tolerance # using a sufficiently small number to measure the convergence
+        xtilde = [Fp1(guess,xdata);Fp2(guess,xdata)] # a 2x10 matrix
+        ytilde = ydata - F(guess,xdata) + (guess * xtilde) # a 1x10 matrix
+        θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde))) # a 1x2 matrix
+        diff = sum((θtilde .- guess).^2) # using summed squares of differences to measure
+        guess = θtilde # iteration
+    end
+    return (θtilde, diff)
 end
 
+sol = nlols(rand(1,2), 1.0e-13)
+p1p2 = sol[1]
+diffr = sol[2]
+
+println("The estimation of θtilde(p1, p2) is $p1p2, the difference with last iteration is $diffr") #([1.8818508553687474, 0.7002298187273654])
