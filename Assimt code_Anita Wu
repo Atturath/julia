@@ -1,0 +1,38 @@
+using LinearAlgebra
+xdata = [-2 -1.64 -1.33 -0.7 0 0.45 1.2 1.64 2.32 2.9] # create a 1x10 matrix 
+
+ydata = [0.699369 0.700462 0.695354 1.03905 1.97389 2.41143 1.91091 0.919576 -0.730975 -1.42001]
+
+# using broadcasting to perform dot operation
+F(p,x) = @. p[1] * cos(p[2] * x) + p[2] * sin(p[1] * x)
+
+# differentiation with respect to p1, p2
+Fp1(p,x) = @. p[2] * x * cos(p[1] * x) + cos(p[2] * x) 
+Fp2(p,x) = @. -p[1] * x * sin(p[2] * x) + sin(p[1] * x) 
+
+function nlols(guess, tolerance = 1.0e-13) 
+    guess = rand(1,2) # generate a 1x2 matrix using random number between 0 and 1 as initial guess 
+    θtilde = guess
+    diff = Inf
+    while diff > tolerance # using a sufficiently small number to measure the convergence
+        # ̃X_i = ∂f(x_i,θ)/∂θ     
+        xtilde = [Fp1(guess,xdata);Fp2(guess,xdata)] # a 2x10 matrix
+        # ̃y_i = y_i - f(x_i, ̃θ_0) + θ_0 * X_i
+        ytilde = ydata - F(guess,xdata) + (guess * xtilde) # a 1x10 matrix
+        
+        # a 1x2 matrix represents the result ̃θ = (X'X)^(-1)(X'y)
+        # using transpose to make the dimension of θtilde equal to diff
+        θtilde = transpose(inv(xtilde * transpose(xtilde)) * (xtilde * transpose(ytilde))) 
+        diff = sum((θtilde .- guess).^2) # using summed squares of differences to measure the convergence
+        guess = θtilde # iteration
+    end
+    return (θtilde, diff)
+end
+
+sol = nlols(rand(1,2), 1.0e-13) # insert value into the function defined before to get an estimation
+p1p2 = sol[1]
+diffr = sol[2]
+
+println("The estimation of θtilde(p1, p2) is $p1p2, the difference with last iteration is $diffr") #(one of the estimation is [1.8818508553687474, 0.7002298187273654])
+
+# different initial guess (depending on the random number generated) may have different results
